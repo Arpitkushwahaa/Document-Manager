@@ -66,17 +66,17 @@ DOWNLOAD FLOW:
 ## 📸 Screenshots
 
 ### Upload Interface
-*Screenshot will be added here*
+`Screenshot will be added here`
 
 ### Document List with Search
-*Screenshot will be added here*
+`Screenshot will be added here`
 
 ### Download Functionality
-*Screenshot will be added here*
+`Screenshot will be added here`
 
 ## 🎥 Demo Video
 
-**Screen Recording (5 minutes):** *[Demo link will be added here]*
+**Screen Recording (5 minutes):** `Demo link will be added here`
 
 ## 🚀 Features
 
