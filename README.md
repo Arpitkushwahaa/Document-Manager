@@ -2,6 +2,23 @@
 
 A modern, full-stack document management system that supports uploading, listing, searching, and downloading documents with an immersive UI.
 
+![Architecture Diagram](architecture-diagram.svg)
+
+## 📸 Screenshots
+
+### Upload Interface
+*Screenshot will be added here*
+
+### Document List with Search
+*Screenshot will be added here*
+
+### Download Functionality
+*Screenshot will be added here*
+
+## 🎥 Demo Video
+
+**Screen Recording (5 minutes):** *[Demo link will be added here]*
+
 ## 🚀 Features
 
 - **Multiple File Upload**: Upload multiple documents simultaneously with drag-and-drop support
@@ -10,57 +27,12 @@ A modern, full-stack document management system that supports uploading, listing
 - **Pagination**: Efficient navigation through large document collections
 - **Streaming Downloads**: Memory-efficient file downloads using streaming
 - **Responsive UI**: Beautiful, modern interface built with React and Tailwind CSS
-- **File Management**: View file sizes, upload dates, and download documents easily
 
 ## 📋 Tech Stack
 
-### Frontend
-- **React 18** - Modern UI library
-- **Vite** - Fast build tool
-- **Tailwind CSS** - Utility-first CSS framework
-- **Axios** - HTTP client
-- **Lucide React** - Beautiful icons
-
-### Backend
-- **Node.js** - Runtime environment
-- **Express** - Web framework
-- **Multer** - Multipart/form-data handling for file uploads
-- **UUID** - Unique ID generation
-- **CORS** - Cross-origin resource sharing
-
-## 🏗️ Architecture
-
-The system follows a clean separation of concerns:
-
-- **Frontend (React)**: Handles UI/UX, user interactions, and API communication
-- **Backend (Express)**: RESTful API endpoints for document operations
-- **File Storage**: Local disk storage for binary files
-- **Metadata Storage**: JSON file for document metadata (title, size, upload date, etc.)
-
-## 📦 Project Structure
-
-```
-Document Manager/
-├── backend/
-│   ├── server.js          # Express server with all API endpoints
-│   ├── package.json       # Backend dependencies
-│   ├── uploads/           # Directory for uploaded files (auto-created)
-│   └── metadata.json      # Document metadata storage (auto-created)
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── UploadSection.jsx    # Multiple file upload UI
-│   │   │   ├── DocumentList.jsx     # Document listing with pagination
-│   │   │   └── SearchBar.jsx        # Search and sort controls
-│   │   ├── App.jsx        # Main application component
-│   │   ├── main.jsx       # React entry point
-│   │   └── index.css      # Global styles with Tailwind
-│   ├── index.html
-│   ├── package.json       # Frontend dependencies
-│   ├── vite.config.js     # Vite configuration
-│   └── tailwind.config.js # Tailwind CSS configuration
-└── README.md
-```
+**Frontend:** React 18, Vite, Tailwind CSS, Axios, Lucide React  
+**Backend:** Node.js, Express, Multer, UUID, CORS  
+**Storage:** Local disk for files, JSON for metadata
 
 ## 🛠️ Setup Instructions
 
@@ -108,93 +80,69 @@ The frontend will run on `http://localhost:3000`
 
 ## 🔌 API Endpoints
 
-### Upload Documents
+**Upload Documents**
 ```
 POST /api/documents
-Content-Type: multipart/form-data
-
-Body: files[] (array of files)
-
-Response: {
-  success: true,
-  documents: [...],
-  count: number
-}
+Body: multipart/form-data with files[]
 ```
 
-### List Documents
+**List Documents**
 ```
 GET /api/documents?page=1&pageSize=10&sortOrder=desc&q=search
-
-Query Parameters:
-- page: Page number (default: 1)
-- pageSize: Items per page (default: 10)
-- sortOrder: 'asc' or 'desc' (default: 'desc')
-- q: Search query for document title
-
-Response: {
-  documents: [...],
-  pagination: {
-    page: number,
-    pageSize: number,
-    total: number,
-    totalPages: number
-  }
-}
 ```
 
-### Download Document
+**Download Document**
 ```
 GET /api/documents/:id/download
-
-Response: File stream with appropriate headers
-- Content-Type: application/octet-stream
-- Content-Disposition: attachment; filename="..."
-- Content-Length: file size
+Returns: File stream
 ```
 
-## 📊 Key Features Implemented
+---
 
-### 1. Multiple File Upload
-- Users can select multiple files at once
-- Drag-and-drop interface for easy file selection
-- Visual feedback showing selected files with sizes
-- Single API call uploads all files efficiently
+## 📝 Setup Assumptions
 
-### 2. Document Listing
-- Paginated display (configurable page size)
-- Shows title, file size, and upload date
-- Responsive grid layout
-- Loading states and empty states
+1. **Local Development**: The application is designed to run locally on a single machine
+2. **No Database**: Uses JSON file for metadata storage instead of a database
+3. **Local File Storage**: Files are stored on the local disk in the `backend/uploads/` directory
+4. **No Authentication**: No user authentication or authorization implemented
+5. **CORS Enabled**: Backend allows cross-origin requests from the frontend
+6. **Port Configuration**: Backend runs on port 5000, frontend on port 3000
+7. **Node.js Environment**: Assumes Node.js v16+ is installed
+8. **No Production Build**: Focused on development mode, not production deployment
 
-### 3. Search Functionality
-- Real-time search by document title
-- Case-insensitive "contains" matching
-- Search results maintain pagination and sorting
-
-### 4. Sorting
-- Sort by upload date (ascending/descending)
-- Persists across search operations
-
-### 5. Streaming Download
-- Files are streamed from disk to client
-- No memory buffering of entire file
-- Proper HTTP headers for file downloads
-- Original filename preserved
+---
 
 ## ⚙️ Key Tradeoffs Due to Time Limit
 
-1. **Local Storage vs Cloud**: Files stored on local disk for simplicity. Production would use S3/GCS.
+1. **Local Storage vs Cloud Storage**
+   - Using local disk storage instead of S3/GCS
+   - Simpler implementation but not scalable for production
+   - Files are not backed up or distributed
 
-2. **JSON Metadata**: Using a JSON file instead of a proper database. Good for demo, but would use PostgreSQL/MongoDB in production.
+2. **JSON File vs Database**
+   - Using `metadata.json` instead of PostgreSQL/MongoDB
+   - Easy for demo but has concurrency issues and no transactions
+   - Not suitable for multiple servers or high traffic
 
-3. **No Authentication**: No user authentication or authorization. Would implement OAuth/JWT in production.
+3. **No Authentication/Authorization**
+   - Skipped user authentication (OAuth/JWT)
+   - Anyone can upload, view, and download all documents
+   - Production would need user sessions and access controls
 
-4. **Basic Validation**: Limited file type and size validation. Production needs comprehensive validation and antivirus scanning.
+4. **Basic Validation**
+   - Limited file type and size validation (100MB limit)
+   - No virus scanning or content validation
+   - Production needs comprehensive security checks
 
-5. **No Error Recovery**: No retry mechanisms or transaction handling. Production needs robust error handling.
+5. **Single Server Architecture**
+   - No load balancing or horizontal scaling
+   - No CDN for serving files
+   - Backend becomes bottleneck for large files
 
-6. **Single Server**: No horizontal scaling or load balancing considered.
+6. **Minimal Error Handling**
+   - Basic try-catch blocks but no retry mechanisms
+   - No transaction rollback for failed uploads
+   - Production needs comprehensive error recovery
 
 ---
 
@@ -202,203 +150,203 @@ Response: File stream with appropriate headers
 
 ### 1. Multiple Uploads - How does your system handle uploading multiple documents?
 
-**Implementation:**
-- Uses a **single HTTP request** to upload multiple files
-- Frontend uses FormData to append multiple files with the same field name (`files[]`)
-- Backend uses Multer's `.array('files')` method to handle multiple files
-- All files are processed in one transaction
+**One request or many?**
+- **Single HTTP request** for all files
+- Frontend uses `FormData` to append multiple files with the same field name (`files[]`)
+- Backend uses Multer's `.array('files')` method to process all files in one transaction
 
-**Limits & Tradeoffs:**
-
-**Pros:**
-- More efficient - single HTTP request reduces overhead
-- Atomic operation - all files succeed or fail together
-- Better UX - single upload progress indicator
-- Reduces server connections
-
-**Cons:**
-- Large batches can timeout
-- If one file fails, may need to retry all
-- Memory usage spikes with many large files
-
-**Current Limits:**
+**Limits:**
 - 100MB per file (configurable in Multer)
-- No explicit limit on number of files, but practically limited by timeout and memory
-- In production, would add: max files per request (e.g., 50), queue large batches, chunked uploads for files >100MB
+- No explicit limit on number of files per request
+- Practically limited by HTTP timeout (~30 seconds) and available memory
 
-**Alternative Considered:**
-- Multiple sequential requests - easier error handling per file but slower and more complex progress tracking
+**Tradeoffs:**
+
+**Advantages:**
+- ✅ More efficient - reduces HTTP overhead
+- ✅ Atomic operation - all files succeed or fail together
+- ✅ Better UX - single upload action with unified feedback
+- ✅ Fewer server connections
+
+**Disadvantages:**
+- ❌ Large batches can timeout
+- ❌ If one file fails, may need to retry all files
+- ❌ Memory usage spikes with many large files simultaneously
+- ❌ No granular progress per file (without additional implementation)
+
+**Production Improvements:**
+- Add maximum files per request (e.g., 50 files)
+- Implement chunked uploads for files >100MB
+- Use background job queue for large batches
+- Add per-file upload progress tracking
+
+---
 
 ### 2. Streaming - Why is streaming important for upload/download?
 
 **Why Streaming Matters:**
 
-**For Downloads:**
-```javascript
-// ❌ BAD - Loading entire file into memory
-const fileData = await fs.readFile(filePath);
-res.send(fileData); // 1GB file = 1GB RAM usage per download
+Without streaming, the server must load the entire file into memory before sending it to the client.
 
-// ✅ GOOD - Streaming
-const stream = fs.createReadStream(filePath);
-stream.pipe(res); // Constant small memory usage
-```
+**Example:**
+- 1GB file without streaming = 1GB RAM used per download
+- 10 concurrent users = 10GB RAM needed
+- Server crashes with out-of-memory errors
 
-**Problems Without Streaming:**
+**Problems When Server Loads Full File into Memory:**
 
 1. **Memory Exhaustion**
-   - 10 users downloading 500MB files = 5GB RAM needed
-   - Server crashes with out-of-memory errors
-   - Can't scale to handle concurrent users
+   - Large files consume massive amounts of RAM
+   - Multiple concurrent downloads quickly exhaust available memory
+   - Server becomes unstable and may crash
+   - Can't scale to handle many users
 
-2. **Slow Time to First Byte (TTFB)**
-   - Must read entire file before sending anything
-   - User waits with no feedback
-   - Poor user experience
+2. **Slow Time to First Byte**
+   - Client must wait for server to read entire file first
+   - No data sent until complete file is loaded
+   - Poor user experience with no immediate feedback
 
-3. **Failed Transfers Waste Resources**
-   - If user cancels after reading full file, all that memory/CPU wasted
-   - With streaming, stop reading immediately on disconnect
+3. **Resource Waste**
+   - If user cancels download, all memory/CPU already wasted
+   - Failed connections waste resources that could serve other users
 
-4. **No Progress Feedback**
-   - Can't track progress of large downloads
-   - Browser can't show download progress bar accurately
+4. **File Size Limitations**
+   - Can't serve files larger than available RAM
+   - Severely limits use cases
 
-**Benefits of Streaming:**
-- Constant memory footprint (~16KB buffer)
-- Start sending data immediately
-- Handle files larger than available RAM
-- Support range requests for resume capability
-- Graceful handling of connection interruptions
+**Benefits of Streaming (Our Implementation):**
 
-**Implementation in Our System:**
 ```javascript
-// Backend streams file in chunks
+// Backend streams file in small chunks
 const fileStream = fsSync.createReadStream(filePath);
-fileStream.pipe(res); // Pipe chunks directly to HTTP response
-
-// Client receives and saves chunks progressively
+fileStream.pipe(res); // Pipe chunks directly to response
 ```
 
-### 3. Moving to S3 - What changes if files move to object storage?
+- ✅ **Constant memory usage** (~16KB buffer regardless of file size)
+- ✅ **Immediate response** - starts sending data right away
+- ✅ **Handles large files** - can serve files bigger than RAM
+- ✅ **Graceful cancellation** - stops reading if client disconnects
+- ✅ **Scalable** - supports many concurrent downloads efficiently
 
-**Backend Changes Required:**
+---
 
-**1. Replace File System Operations:**
+### 3. Moving to S3 - If files move to object storage (e.g., S3):
+
+**What changes in your backend?**
+
+**1. Upload Endpoint Changes:**
 ```javascript
-// Current (Local Disk):
-const storage = multer.diskStorage({...});
-const stream = fs.createReadStream(filePath);
+// Before (Local Disk):
+const storage = multer.diskStorage({
+  destination: './uploads',
+  filename: (req, file, cb) => cb(null, `${uuid()}${ext}`)
+});
 
-// S3 Version:
+// After (S3):
 const storage = multerS3({
   s3: s3Client,
   bucket: 'my-documents',
-  key: (req, file, cb) => cb(null, `${uuid()}`)
+  key: (req, file, cb) => cb(null, `documents/${uuid()}${ext}`)
 });
-const stream = s3Client.getObject({ Bucket, Key }).createReadStream();
 ```
 
-**2. Update Upload Endpoint:**
-- Change from `multer.diskStorage` to `multer-s3`
-- Store S3 key instead of local filename in metadata
-- Add region and bucket info to configuration
-
-**3. Update Download Endpoint:**
-- Generate pre-signed URLs for direct S3 downloads OR
-- Stream from S3 through backend
-- Update metadata to store S3 object key
-
-**4. Metadata Changes:**
+**2. Metadata Storage:**
 ```javascript
 // Before:
-{
-  filename: "uuid.pdf",  // local file path
-  ...
-}
+{ filename: "abc123.pdf", ... }
 
 // After:
-{
-  s3Key: "documents/uuid.pdf",
-  s3Bucket: "my-documents-prod",
+{ 
+  s3Key: "documents/abc123.pdf",
+  s3Bucket: "my-documents",
   s3Region: "us-east-1",
   ...
 }
 ```
 
+**3. Download Endpoint Changes:**
+- Generate pre-signed URLs instead of streaming from disk
+- Or stream from S3 through backend (less efficient)
+
+**4. Dependencies:**
+- Add AWS SDK (`@aws-sdk/client-s3`, `multer-s3`)
+- Configure AWS credentials and IAM roles
+- Add S3 bucket configuration
+
 **Would the backend still handle file bytes?**
 
-**Two Approaches:**
+**Two approaches:**
 
-**Approach 1: Backend Proxies (Current streaming model)**
-- Backend streams from S3 → Client
-- **Pros**: Fine-grained access control, usage tracking, content modification
-- **Cons**: Backend bandwidth costs, increased latency, backend becomes bottleneck
-
-**Approach 2: Pre-signed URLs (Better for most cases)**
+**Option 1: Backend Proxies (Streaming through backend)**
 ```javascript
-// Backend generates temporary URL
+const s3Stream = s3Client.getObject({ Bucket, Key }).createReadStream();
+s3Stream.pipe(res);
+```
+- Backend still handles bytes by streaming S3 → Backend → Client
+- **Use when:** Need access control, logging, transformation
+- **Tradeoff:** Backend bandwidth costs, increased latency
+
+**Option 2: Pre-signed URLs (Recommended)**
+```javascript
 const url = s3Client.getSignedUrl('getObject', {
   Bucket: 'my-documents',
   Key: document.s3Key,
   Expires: 3600 // 1 hour
 });
 res.json({ downloadUrl: url });
-
-// Client downloads directly from S3
 ```
-- **Pros**: Faster downloads, reduced backend load, S3's global CDN
-- **Cons**: Less control, URL can be shared within expiry time
+- Backend does NOT handle bytes - client downloads directly from S3
+- **Use when:** Want fast downloads, reduce backend load
+- **Tradeoff:** Less control over access, URL can be shared temporarily
 
-**Recommendation**: Use pre-signed URLs for downloads, proxy uploads through backend for validation.
+**Recommendation:**
+- **Downloads:** Use pre-signed URLs (faster, scalable)
+- **Uploads:** Proxy through backend for validation and virus scanning
 
-**Additional Considerations:**
-- Add AWS SDK (`aws-sdk` or `@aws-sdk/client-s3`)
-- Configure IAM roles with least privilege
+**Additional considerations:**
 - Enable S3 versioning for file history
-- Add lifecycle policies for cost optimization
-- Consider CloudFront CDN for global distribution
+- Add lifecycle policies to archive old files
+- Use CloudFront CDN for global distribution
 - Implement retry logic for S3 API failures
 
-### 4. Frontend UX - If you had more time, how would you improve it?
+---
 
-**Document Preview:**
+### 4. Frontend UX - If you had more time:
+
+**How would you add document preview?**
 
 **Implementation Plan:**
+
 1. **Preview Modal Component**
-   ```javascript
-   <PreviewModal document={selectedDoc} onClose={...} />
-   ```
+   - Click document → opens full-screen modal
+   - Display based on file type
 
 2. **File Type Handling**
-   - **PDFs**: Use `react-pdf` library to render inline
-   - **Images**: Display with `<img>` tag, add zoom/pan
-   - **Text/Code**: Syntax highlighting with `react-syntax-highlighter`
-   - **Office Docs**: Use Google Docs Viewer iframe or Office Online
-   - **Videos**: HTML5 `<video>` player with controls
+   - **PDFs:** Use `react-pdf` or `pdf.js` to render pages
+   - **Images:** Display with `<img>` tag, add zoom/pan controls
+   - **Text/Code:** Syntax highlighting with `react-syntax-highlighter`
+   - **Office Docs:** Embed using Google Docs Viewer or Office Online
+   - **Videos:** HTML5 `<video>` player with controls
+   - **Other:** Show metadata and download option
 
-3. **Backend Changes**
+3. **Backend Endpoint**
    ```javascript
-   // New endpoint for preview (lower quality/size)
    GET /api/documents/:id/preview
-   
-   // For PDFs: first page thumbnail
-   // For images: resized version
-   // For videos: thumbnail extraction
+   // Returns optimized preview version (thumbnails, first page, etc.)
    ```
 
-4. **UX Flow**
-   - Click document → Preview modal opens
+4. **UX Features**
+   - Navigation arrows for next/previous document
+   - Zoom controls for images/PDFs
+   - Full download button within preview
+   - Close on ESC key or click outside
    - Loading spinner while fetching
-   - Navigation arrows for next/previous
-   - Full download button in preview
-   - Close on ESC or click outside
 
-**Upload Progress:**
+**How would you show upload progress?**
 
-**Implementation Plan:**
+**Implementation:**
 
-1. **Progress Tracking**
+1. **Track Upload Progress**
    ```javascript
    const [uploadProgress, setUploadProgress] = useState({});
    
@@ -415,87 +363,42 @@ res.json({ downloadUrl: url });
    });
    ```
 
-2. **Visual Indicators**
-   - Per-file progress bars with percentage
-   - Overall upload progress
-   - Upload speed (MB/s)
-   - Estimated time remaining
-   - Success/error icons per file
+2. **Visual Progress Indicators**
+   - **Per-file progress bar** showing percentage (0-100%)
+   - **Overall progress** for batch upload
+   - **Upload speed** (MB/s calculated from bytes and time)
+   - **Estimated time remaining** (ETA)
+   - **Status icons** (uploading/success/error per file)
 
 3. **Advanced Features**
-   - Pause/resume uploads (chunked upload needed)
-   - Cancel individual files
-   - Retry failed uploads
+   - Pause/resume uploads (requires chunked upload implementation)
+   - Cancel individual files without stopping others
+   - Retry failed uploads automatically or manually
    - Background uploads (continue while browsing)
+   - Desktop notifications when complete
 
-4. **UI Component**
-   ```javascript
+4. **UI Component Example**
+   ```jsx
    <ProgressBar 
-     fileName={file.name}
-     progress={uploadProgress[file.id]}
-     speed={uploadSpeed}
-     status={status} // 'uploading' | 'success' | 'error'
+     fileName="document.pdf"
+     progress={75}
+     speed="2.5 MB/s"
+     timeRemaining="15 seconds"
+     status="uploading" // or 'success' | 'error'
    />
    ```
 
-**Other UX Improvements:**
-
-1. **Bulk Operations**
-   - Multi-select documents
-   - Bulk download as ZIP
-   - Bulk delete with confirmation
-
-2. **Advanced Search**
-   - Filter by file type, size range, date range
-   - Search debouncing for better performance
-   - Search history/suggestions
-
-3. **Keyboard Shortcuts**
-   - `Ctrl+U`: Upload
-   - `Ctrl+F`: Focus search
-   - Arrow keys: Navigate documents
-   - `Enter`: Download selected
-
-4. **Accessibility**
-   - ARIA labels for screen readers
-   - Keyboard navigation
-   - Focus indicators
-   - High contrast mode
-
-5. **Offline Support**
-   - Service worker for offline viewing
-   - Queue uploads when offline
-   - Sync when connection restored
-
-6. **Notifications**
-   - Toast messages for actions
-   - Desktop notifications for completed uploads
-   - Error alerts with retry options
-
 ---
-
-## 🧪 Testing
-
-While comprehensive tests are out of scope for this assignment, here are test scenarios covered manually:
-
-- ✅ Upload single file
-- ✅ Upload multiple files simultaneously
-- ✅ Search documents by title
-- ✅ Sort documents (newest/oldest)
-- ✅ Pagination navigation
-- ✅ Download documents with correct filenames
-- ✅ Empty state handling
-- ✅ Error handling for failed uploads
-- ✅ Large file uploads (tested with 50MB+ files)
-- ✅ Special characters in filenames
 
 ## 📝 License
 
-MIT License - feel free to use this project for learning purposes.
+MIT License
 
 ## 👤 Author
 
-Created as part of an internship assignment for Finfully.
+**Arpit Kushwaha**
+
+Created as part of an internship assignment for Finfully AI.
 
 ---
 
