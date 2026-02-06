@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Document Manager - Architecture Diagram</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: white;
+        }
+        .diagram {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #1a202c;
+        }
+        .container {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        .box {
+            flex: 1;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .box.backend {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border-color: #48bb78;
+        }
+        .box.storage {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            border-color: #ed8936;
+        }
+        .box h2 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            border-bottom: 2px solid white;
+            padding-bottom: 10px;
+        }
+        .box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .box li {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .api-endpoint {
+            background: white;
+            color: #2d3748;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .flow {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border: 2px solid #cbd5e0;
+        }
+        .flow h3 {
+            margin: 0 0 15px 0;
+            color: #2d3748;
+            font-size: 18px;
+        }
+        .flow-steps {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .step {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #2d3748;
+            min-width: 150px;
+            text-align: center;
+        }
+        .arrow {
+            color: #667eea;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .note {
+            margin-top: 30px;
+            padding: 15px;
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #742a2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram">
+        <div class="title">Document Manager - System Architecture</div>
+        
+        <div class="container">
+            <div class="box">
+                <h2>FRONTEND</h2>
+                <p><strong>React + Vite + Tailwind CSS</strong></p>
+                <ul>
+                    <li><strong>Upload Section</strong><br>• Multiple file upload<br>• Drag & drop interface</li>
+                    <li><strong>Search Bar</strong><br>• Text search by title<br>• Sort controls</li>
+                    <li><strong>Document List</strong><br>• Paginated display<br>• Download buttons</li>
+                </ul>
+            </div>
+            
+            <div class="box backend">
+                <h2>BACKEND</h2>
+                <p><strong>Node.js + Express</strong></p>
+                <div class="api-endpoint">POST /api/documents</div>
+                <small>Upload multiple files (multipart/form-data)</small>
+                
+                <div class="api-endpoint">GET /api/documents?page=1&q=search</div>
+                <small>List with pagination, search, sorting</small>
+                
+                <div class="api-endpoint">GET /api/documents/:id/download</div>
+                <small>Streaming file download</small>
+                
+                <p style="margin-top: 15px;"><strong>Middleware:</strong> Multer, CORS</p>
+            </div>
+            
+            <div class="box storage">
+                <h2>STORAGE LAYER</h2>
+                <p><strong>Local Disk Storage</strong></p>
+                <ul>
+                    <li><strong>📁 /uploads/</strong><br>Binary file storage<br>UUID-based filenames</li>
+                    <li><strong>📄 metadata.json</strong><br>Document metadata:<br>• ID, title, size<br>• Upload date<br>• MIME type</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="flow">
+            <h3>📤 UPLOAD FLOW</h3>
+            <div class="flow-steps">
+                <div class="step">1. User Selects<br>Multiple Files</div>
+                <span class="arrow">→</span>
+                <div class="step">2. FormData<br>Created</div>
+                <span class="arrow">→</span>
+                <div class="step">3. POST Request<br>to Backend</div>
+                <span class="arrow">→</span>
+                <div class="step">4. Multer Saves<br>to Disk</div>
+                <span class="arrow">→</span>
+                <div class="step">5. Metadata<br>Stored</div>
+                <span class="arrow">→</span>
+                <div class="step">6. Success<br>Response</div>
+            </div>
+        </div>
+        
+        <div class="flow">
+            <h3>📥 DOWNLOAD FLOW</h3>
+            <div class="flow-steps">
+                <div class="step">1. User Clicks<br>Download Button</div>
+                <span class="arrow">→</span>
+                <div class="step">2. GET Request<br>with Document ID</div>
+                <span class="arrow">→</span>
+                <div class="step">3. Backend Finds<br>File on Disk</div>
+                <span class="arrow">→</span>
+                <div class="step">4. Stream File<br>in Chunks</div>
+                <span class="arrow">→</span>
+                <div class="step">5. Browser Receives<br>& Saves File</div>
+            </div>
+        </div>
+        
+        <div class="note">
+            <strong>Key Design Decisions:</strong><br>
+            • Single HTTP request for multiple file uploads (atomic operation)<br>
+            • Streaming for downloads (constant memory usage, scalable)<br>
+            • Local storage for demo (Production: migrate to S3/GCS)<br>
+            • JSON file for metadata (Production: use PostgreSQL/MongoDB)
+        </div>
+    </div>
+</body>
+</html>
