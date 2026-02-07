@@ -66,13 +66,10 @@ DOWNLOAD FLOW:
 ## 📸 Screenshots
 
 ### Upload Interface
-`Screenshot will be added here`
+![Upload Interface](screenshot-upload.png)
 
 ### Document List with Search
-`Screenshot will be added here`
-
-### Download Functionality
-`Screenshot will be added here`
+![Document List](screenshot-list.png)
 
 ## 🎥 Demo Video
 
