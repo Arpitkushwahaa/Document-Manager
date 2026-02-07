@@ -44,7 +44,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
+  limits: { 
+    fileSize: 100 * 1024 * 1024, // 100MB per file
+    files: 50 // Maximum 50 files per request
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept all files but log them
+    console.log(`Processing file: ${file.originalname} (${file.mimetype})`);
+    cb(null, true);
+  }
 });
 
 // Helper functions
@@ -61,35 +69,123 @@ async function writeMetadata(data) {
   await fs.writeFile(METADATA_FILE, JSON.stringify(data, null, 2));
 }
 
+// Helper function to wait for file to be fully written
+async function waitForFile(filePath, maxAttempts = 10) {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const stats = await fs.stat(filePath);
+      if (stats.size > 0) {
+        return stats;
+      }
+      // If size is 0, wait a bit and try again
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } catch (error) {
+      // File doesn't exist yet, wait and retry
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+  throw new Error('File not fully written after maximum attempts');
+}
+
 // API Routes
 
-// Upload documents
-app.post('/api/documents', upload.array('files'), async (req, res) => {
+// Upload documents with error handling wrapper
+app.post('/api/documents', (req, res, next) => {
+  upload.array('files')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      console.error('Multer error:', err);
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File size exceeds 100MB limit' });
+      }
+      if (err.code === 'LIMIT_FILE_COUNT') {
+        return res.status(400).json({ error: 'Too many files. Maximum 50 files allowed' });
+      }
+      return res.status(400).json({ error: `Upload error: ${err.message}` });
+    } else if (err) {
+      console.error('Unknown upload error:', err);
+      return res.status(500).json({ error: 'Failed to process upload' });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
     }
 
+    console.log(`Received ${req.files.length} files for upload`);
+    
     const metadata = await readMetadata();
-    const newDocuments = req.files.map(file => ({
-      id: uuidv4(),
-      title: file.originalname,
-      filename: file.filename,
-      size: file.size,
-      mimeType: file.mimetype,
-      uploadDate: new Date().toISOString()
-    }));
+    const newDocuments = [];
+    const failedFiles = [];
+
+    // Process each file and verify it exists
+    for (const file of req.files) {
+      const filePath = path.join(UPLOAD_DIR, file.filename);
+      
+      try {
+        // Wait for file to be fully written and get actual size
+        const stats = await waitForFile(filePath);
+        
+        const doc = {
+          id: uuidv4(),
+          title: file.originalname,
+          filename: file.filename,
+          size: stats.size,
+          mimeType: file.mimetype,
+          uploadDate: new Date().toISOString()
+        };
+        
+        newDocuments.push(doc);
+        console.log(`✓ File saved: ${file.originalname} (${stats.size} bytes)`);
+      } catch (statError) {
+        console.error(`✗ Error verifying file ${file.originalname}:`, statError.message);
+        failedFiles.push(file.originalname);
+        
+        // Try to clean up the failed file
+        try {
+          await fs.unlink(filePath);
+        } catch (unlinkError) {
+          console.error(`Could not clean up failed file: ${file.filename}`);
+        }
+      }
+    }
+
+    if (newDocuments.length === 0) {
+      return res.status(500).json({ 
+        error: 'No files were successfully saved',
+        failedFiles: failedFiles
+      });
+    }
 
     metadata.push(...newDocuments);
     await writeMetadata(metadata);
 
+    const responseMessage = failedFiles.length > 0
+      ? `Uploaded ${newDocuments.length} out of ${req.files.length} files. Failed: ${failedFiles.join(', ')}`
+      : `Successfully uploaded ${newDocuments.length} file(s)`;
+
+    console.log(`Upload complete: ${newDocuments.length} succeeded, ${failedFiles.length} failed`);
+
     res.status(201).json({ 
       success: true, 
+      message: responseMessage,
       documents: newDocuments,
-      count: newDocuments.length
+      count: newDocuments.length,
+      failedFiles: failedFiles
     });
   } catch (error) {
     console.error('Upload error:', error);
+    // Cleanup uploaded files on error
+    if (req.files) {
+      for (const file of req.files) {
+        try {
+          await fs.unlink(path.join(UPLOAD_DIR, file.filename));
+        } catch (unlinkError) {
+          console.error('Error cleaning up file:', unlinkError);
+        }
+      }
+    }
     res.status(500).json({ error: 'Failed to upload documents' });
   }
 });
@@ -159,26 +255,67 @@ app.get('/api/documents/:id/download', async (req, res) => {
       return res.status(404).json({ error: 'File not found on disk' });
     }
 
-    // Set headers for download
+    // Set proper headers for download with encoded filename
+    const encodedFilename = encodeURIComponent(document.title);
     res.setHeader('Content-Type', document.mimeType || 'application/octet-stream');
-    res.setHeader('Content-Disposition', `attachment; filename="${document.title}"`);
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodedFilename}`);
     res.setHeader('Content-Length', document.size);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Accept-Ranges', 'bytes');
 
     // Stream the file
     const fileStream = fsSync.createReadStream(filePath);
-    fileStream.pipe(res);
-
+    
     fileStream.on('error', (error) => {
       console.error('Stream error:', error);
       if (!res.headersSent) {
         res.status(500).json({ error: 'Failed to download file' });
       }
     });
+
+    fileStream.pipe(res);
   } catch (error) {
     console.error('Download error:', error);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Failed to download document' });
     }
+  }
+});
+
+// Delete document
+app.delete('/api/documents/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const metadata = await readMetadata();
+    const documentIndex = metadata.findIndex(doc => doc.id === id);
+
+    if (documentIndex === -1) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    const document = metadata[documentIndex];
+    const filePath = path.join(UPLOAD_DIR, document.filename);
+
+    // Delete the file from disk
+    try {
+      await fs.unlink(filePath);
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      // Continue even if file deletion fails
+    }
+
+    // Remove from metadata
+    metadata.splice(documentIndex, 1);
+    await writeMetadata(metadata);
+
+    res.json({ 
+      success: true, 
+      message: 'Document deleted successfully',
+      id: id
+    });
+  } catch (error) {
+    console.error('Delete error:', error);
+    res.status(500).json({ error: 'Failed to delete document' });
   }
 });
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, File, Calendar, HardDrive, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Download, File, Calendar, HardDrive, ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
 const DocumentList = ({ refreshTrigger, searchQuery, sortOrder }) => {
@@ -12,6 +12,7 @@ const DocumentList = ({ refreshTrigger, searchQuery, sortOrder }) => {
     totalPages: 0
   });
   const [downloading, setDownloading] = useState({});
+  const [deleting, setDeleting] = useState({});
 
   useEffect(() => {
     fetchDocuments();
@@ -65,6 +66,24 @@ const DocumentList = ({ refreshTrigger, searchQuery, sortOrder }) => {
       alert('Failed to download document');
     } finally {
       setDownloading(prev => ({ ...prev, [doc.id]: false }));
+    }
+  };
+
+  const handleDelete = async (doc) => {
+    if (!window.confirm(`Are you sure you want to delete "${doc.title}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeleting(prev => ({ ...prev, [doc.id]: true }));
+    
+    try {
+      await axios.delete(`/api/documents/${doc.id}`);
+      // Refresh the document list
+      fetchDocuments();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      alert('Failed to delete document');
+      setDeleting(prev => ({ ...prev, [doc.id]: false }));
     }
   };
 
@@ -154,23 +173,38 @@ const DocumentList = ({ refreshTrigger, searchQuery, sortOrder }) => {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleDownload(doc)}
-                  disabled={downloading[doc.id]}
-                  className="btn-primary flex items-center gap-2 whitespace-nowrap"
-                >
-                  {downloading[doc.id] ? (
-                    <>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleDownload(doc)}
+                    disabled={downloading[doc.id] || deleting[doc.id]}
+                    className="btn-primary flex items-center gap-2 whitespace-nowrap"
+                  >
+                    {downloading[doc.id] ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        Downloading...
+                      </>
+                    ) : (
+                      <>
+                        <Download size={18} />
+                        Download
+                      </>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={() => handleDelete(doc)}
+                    disabled={downloading[doc.id] || deleting[doc.id]}
+                    className="p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    title="Delete document"
+                  >
+                    {deleting[doc.id] ? (
                       <Loader2 className="animate-spin" size={18} />
-                      Downloading...
-                    </>
-                  ) : (
-                    <>
-                      <Download size={18} />
-                      Download
-                    </>
-                  )}
-                </button>
+                    ) : (
+                      <Trash2 size={18} />
+                    )}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

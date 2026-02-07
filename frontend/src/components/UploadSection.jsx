@@ -54,29 +54,47 @@ const UploadSection = ({ onUploadSuccess }) => {
     setUploadStatus(null);
 
     const formData = new FormData();
-    selectedFiles.forEach(file => {
+    selectedFiles.forEach((file, index) => {
+      console.log(`Adding file ${index + 1}:`, file.name, file.size);
       formData.append('files', file);
     });
+
+    console.log(`Uploading ${selectedFiles.length} files...`);
 
     try {
       const response = await axios.post('/api/documents', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 300000, // 5 minute timeout for large uploads
       });
 
-      setUploadStatus({ 
-        type: 'success', 
-        message: `Successfully uploaded ${response.data.count} document(s)` 
-      });
+      console.log('Upload response:', response.data);
+
+      const uploadedCount = response.data.count || 0;
+      const expectedCount = selectedFiles.length;
+
+      if (uploadedCount < expectedCount) {
+        setUploadStatus({ 
+          type: 'error', 
+          message: `Warning: Only ${uploadedCount} out of ${expectedCount} files were uploaded successfully. Please try again.` 
+        });
+      } else {
+        setUploadStatus({ 
+          type: 'success', 
+          message: `Successfully uploaded ${uploadedCount} document(s)` 
+        });
+      }
+      
       setSelectedFiles([]);
       onUploadSuccess();
 
       setTimeout(() => setUploadStatus(null), 5000);
     } catch (error) {
+      console.error('Upload error:', error);
       setUploadStatus({ 
         type: 'error', 
-        message: error.response?.data?.error || 'Failed to upload documents' 
+        message: error.response?.data?.error || 'Failed to upload documents. Please try again.' 
       });
     } finally {
       setUploading(false);

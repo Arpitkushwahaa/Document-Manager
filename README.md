@@ -83,9 +83,11 @@ DOWNLOAD FLOW:
 - **Multiple File Upload**: Upload multiple documents simultaneously with drag-and-drop support
 - **Smart Search**: Real-time text search across document titles
 - **Sorting**: Sort documents by upload date (newest/oldest first)
-- **Pagination**: Efficient navigation through large document collections
+- **Pagination**: Efficient navigation through large document collections (10 items per page)
 - **Streaming Downloads**: Memory-efficient file downloads using streaming
+- **Delete Documents**: Remove documents with confirmation dialog
 - **Responsive UI**: Beautiful, modern interface built with React and Tailwind CSS
+- **State Management**: Proper loading, empty, and error states throughout the app
 
 ## 📋 Tech Stack
 
@@ -143,17 +145,25 @@ The frontend will run on `http://localhost:3000`
 ```
 POST /api/documents
 Body: multipart/form-data with files[]
+Response: { success, message, documents[], count }
 ```
 
 **List Documents**
 ```
 GET /api/documents?page=1&pageSize=10&sortOrder=desc&q=search
+Response: { documents[], pagination }
 ```
 
 **Download Document**
 ```
 GET /api/documents/:id/download
-Returns: File stream
+Returns: File stream with proper headers
+```
+
+**Delete Document**
+```
+DELETE /api/documents/:id
+Response: { success, message, id }
 ```
 
 ---
